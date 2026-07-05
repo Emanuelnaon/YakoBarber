@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { supabase } from './lib/supabaseClient';
 import { ServiciosPanel } from './components/ServiciosPanel';
+import { AgendaPanel } from './components/AgendaPanel';
+import { ConfiguracionPanel } from './components/ConfiguracionPanel';
 
 function App() {
     const { user, perfil, loading, iniciarSesionConOtp, verificarCodigoOtp, cerrarSesion } = useAuth();
@@ -129,6 +131,8 @@ function App() {
                                     ¡Bienvenido a {perfil.negocios?.nombre || 'tu Barbería'}!
                                 </h2>
                                 <ServiciosPanel negocioId={perfil.negocio_id} />
+                                <AgendaPanel negocioId={perfil.negocio_id} />
+                                <ConfiguracionPanel negocioId={perfil.negocio_id} />
                                 <p className="text-sm text-slate-400 mb-4">
                                     ID de Negocio:{' '}
                                     <code className="text-xs bg-slate-800 p-1 rounded break-all">
