@@ -10,17 +10,55 @@ export interface Database {
                     telefono_whatsapp: string;
                     created_at: string;
                 };
-                Insert: Record<string, unknown>;
-                Update: Record<string, unknown>;
+                Insert: {
+                    id?: string; // Opcional porque la BD lo genera
+                    nombre: string;
+                    telefono_whatsapp: string;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    nombre?: string;
+                    telefono_whatsapp?: string;
+                    created_at?: string;
+                };
+                Relationships: {
+                    foreignKeyName: string;
+                    columns: string[];
+                    isOneToOne?: boolean;
+                    referencedRelation: string;
+                    referencedColumns: string[];
+                }[];
             };
             perfiles: {
                 Row: {
                     id: string;
-                    negocio_id: string;
+                    negocio_id: string | null;
                     nombre: string;
                     rol: 'admin' | 'empleado';
                     created_at: string;
                 };
+                Insert: {
+                    id: string;
+                    negocio_id?: string | null;
+                    nombre: string;
+                    rol?: 'admin' | 'empleado';
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    negocio_id?: string | null;
+                    nombre?: string;
+                    rol?: 'admin' | 'empleado';
+                    created_at?: string;
+                };
+                Relationships: {
+                    foreignKeyName: string;
+                    columns: string[];
+                    isOneToOne?: boolean;
+                    referencedRelation: string;
+                    referencedColumns: string[];
+                }[];
             };
             servicios: {
                 Row: {
@@ -31,6 +69,29 @@ export interface Database {
                     duracion_minutos: number;
                     active: boolean;
                 };
+                Insert: {
+                    id?: string;
+                    negocio_id: string;
+                    nombre: string;
+                    precio: number;
+                    duracion_minutos: number;
+                    active?: boolean;
+                };
+                Update: {
+                    id?: string;
+                    negocio_id?: string;
+                    nombre?: string;
+                    precio?: number;
+                    duracion_minutos?: number;
+                    active?: boolean;
+                };
+                Relationships: {
+                    foreignKeyName: string;
+                    columns: string[];
+                    isOneToOne?: boolean;
+                    referencedRelation: string;
+                    referencedColumns: string[];
+                }[];
             };
             turnos: {
                 Row: {
@@ -42,7 +103,35 @@ export interface Database {
                     estado: 'pendiente' | 'confirmado' | 'cancelado';
                     created_at: string;
                 };
+                Insert: {
+                    id?: string;
+                    negocio_id: string;
+                    servicio_id?: string | null;
+                    cliente_nombre: string;
+                    fecha_hora: string;
+                    estado?: 'pendiente' | 'confirmado' | 'cancelado';
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    negocio_id?: string;
+                    servicio_id?: string | null;
+                    cliente_nombre?: string;
+                    fecha_hora?: string;
+                    estado?: 'pendiente' | 'confirmado' | 'cancelado';
+                    created_at?: string;
+                };
+                Relationships: {
+                    foreignKeyName: string;
+                    columns: string[];
+                    isOneToOne?: boolean;
+                    referencedRelation: string;
+                    referencedColumns: string[];
+                }[];
             };
         };
+        Views: Record<string, never>;
+        Functions: Record<string, never>;
+        Enums: Record<string, never>;
     };
 }

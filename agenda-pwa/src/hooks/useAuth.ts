@@ -8,11 +8,22 @@ export function useAuth() {
     const [perfil, setPerfil] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
-    // 1. Movemos la función ARRIBA para que esté declarada antes de usarse
     async function fetchPerfil(userId: string) {
         try {
             setLoading(true);
-            const { data, error } = await supabase.from('perfiles').select('*').eq('id', userId).single();
+            // Traemos el perfil y el nombre del negocio en una sola consulta
+            const { data, error } = await supabase
+                .from('perfiles')
+                .select(
+                    `
+          *,
+          negocios (
+            nombre
+          )
+        `,
+                )
+                .eq('id', userId)
+                .maybeSingle();
 
             if (error) throw error;
             setPerfil(data);
@@ -23,7 +34,6 @@ export function useAuth() {
         }
     }
 
-    // 2. El useEffect va después
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
             setUser(session?.user ?? null);

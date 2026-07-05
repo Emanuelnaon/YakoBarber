@@ -9,4 +9,4 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Inicialización del cliente con el tipado de la base de datos
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient<Database, 'public'>(supabaseUrl, supabaseAnonKey);
