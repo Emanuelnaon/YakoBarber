@@ -1,56 +1,47 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
-type Servicio = {
-    id: string;
-    nombre: string;
-    precio: number;
-};
+type Servicio = { id: string; nombre: string; precio: number };
 
 export function ServiciosPanel({ negocioId }: { negocioId: string }) {
     const [servicios, setServicios] = useState<Servicio[]>([]);
     const [nombre, setNombre] = useState('');
     const [precio, setPrecio] = useState('');
 
-    // Movemos la lógica de obtención de datos a una función independiente
     const fetchServicios = useCallback(async () => {
         const { data } = await supabase.from('servicios').select('id, nombre, precio').eq('negocio_id', negocioId);
-
-        if (data) {
-            setServicios(data);
-        }
+        if (data) setServicios(data);
     }, [negocioId]);
 
-    // En lugar de llamar a una función que hace setState dentro del useEffect,
-    // simplemente invocamos el callback.
-    // Para evitar la advertencia de 'set-state-in-effect', aseguramos que la
-    // actualización sea el resultado lógico de una promesa resuelta.
+    async function refrescarLista() {
+        const { data } = await supabase.from('servicios').select('id, nombre, precio').eq('negocio_id', negocioId);
+        if (data) setServicios(data);
+    }
+    
     useEffect(() => {
-        let active = true;
+        let activo = true;
 
-        const load = async () => {
+        async function cargar() {
             const { data } = await supabase.from('servicios').select('id, nombre, precio').eq('negocio_id', negocioId);
 
-            if (active && data) {
+            if (activo && data) {
                 setServicios(data);
             }
-        };
+        }
 
-        load();
+        cargar();
+
         return () => {
-            active = false;
+            activo = false;
         };
-    }, [negocioId]);
+    }, [negocioId]); // Tu única dependencia real es el negocioId
 
-    // Usamos FormEvent<HTMLFormElement> para ser específicos y evitar el deprecated
-    async function agregarServicio(e: React.FormEvent<HTMLFormElement>) {
+    async function agregarServicio(e: React.SyntheticEvent<HTMLFormElement>) {
         e.preventDefault();
 
-        // Verificamos si ya existe antes de insertar
-        const yaExiste = servicios.some((s) => s.nombre.toLowerCase() === nombre.toLowerCase());
-
-        if (yaExiste) {
-            alert('Ya tenés un servicio con ese nombre. ¡Edítalo en lugar de crear uno nuevo!');
+        // Protección 1: Frontend (evita el viaje a la BD si ya sabemos que está)
+        if (servicios.some((s) => s.nombre.toLowerCase() === nombre.toLowerCase())) {
+            alert('Ya tenés un servicio con ese nombre. ¡Edítalo luego!');
             return;
         }
 
@@ -63,10 +54,44 @@ export function ServiciosPanel({ negocioId }: { negocioId: string }) {
             },
         ]);
 
-        if (!error) {
+        // Protección 2: Base de Datos (capturamos el error por si acaso)
+        if (error) {
+            if (error.code === '23505') alert('Error: Ese nombre de servicio ya existe en la base de datos.');
+            else alert('Error: ' + error.message);
+        } else {
             setNombre('');
             setPrecio('');
             await fetchServicios();
+        }
+    }
+
+    async function eliminarServicio(id: string) {
+        if (!confirm('¿Seguro que querés eliminar este servicio?')) return;
+
+        const { error } = await supabase.from('servicios').delete().eq('id', id);
+
+        if (error) {
+            alert('Error al eliminar: ' + error.message);
+        } else {
+            await refrescarLista();
+        }
+    }
+
+    async function editarPrecio(id: string, nombreActual: string, precioActual: number) {
+        const nuevoPrecio = prompt(`Editar precio para ${nombreActual}:`, precioActual.toString());
+
+        // Si cancela o no pone un número válido, salimos
+        if (nuevoPrecio === null || isNaN(Number(nuevoPrecio)) || Number(nuevoPrecio) <= 0) return;
+
+        const { error } = await supabase
+            .from('servicios')
+            .update({ precio: Number(nuevoPrecio) })
+            .eq('id', id);
+
+        if (error) {
+            alert('Error al actualizar: ' + error.message);
+        } else {
+            await refrescarLista();
         }
     }
 
@@ -95,9 +120,28 @@ export function ServiciosPanel({ negocioId }: { negocioId: string }) {
             </form>
             <div className="space-y-2">
                 {servicios.map((s) => (
-                    <div key={s.id} className="flex justify-between bg-slate-800 p-3 rounded border border-slate-700">
-                        <span>{s.nombre}</span>
-                        <span className="font-mono text-green-400">${s.precio}</span>
+                    <div
+                        key={s.id}
+                        className="flex justify-between items-center bg-slate-800 p-3 rounded border border-slate-700">
+                        <div>
+                            <span className="font-medium text-white">{s.nombre}</span>
+                            <span className="font-mono text-green-400 ml-4">${s.precio}</span>
+                        </div>
+
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => editarPrecio(s.id, s.nombre, s.precio)}
+                                className="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-blue-400 transition"
+                                title="Editar Precio">
+                                ✏️
+                            </button>
+                            <button
+                                onClick={() => eliminarServicio(s.id)}
+                                className="text-xs bg-slate-700 hover:bg-red-950 px-2 py-1 rounded text-red-400 transition"
+                                title="Eliminar">
+                                🗑️
+                            </button>
+                        </div>
                     </div>
                 ))}
             </div>
