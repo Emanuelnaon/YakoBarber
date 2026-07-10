@@ -1,5 +1,4 @@
 import { supabase } from '../lib/supabaseClient';
-import type { Database } from '../lib/database.types';
 
 interface MensajeEntrante {
     telefonoCliente: string;
@@ -11,7 +10,23 @@ interface RespuestaBot {
     textoEnviar: string;
 }
 
-type ConfigHorarios = Database['public']['Tables']['configuracion_horarios']['Row'];
+interface ConfigHorarios {
+    hora_apertura: string;
+    hora_cierre: string;
+    bloque_minutos: number;
+}
+
+interface TurnoOcupado {
+    fecha_hora: string;
+}
+
+interface TurnoInsert {
+    negocio_id: string;
+    cliente_nombre: string;
+    cliente_telefono: string;
+    fecha_hora: string;
+    estado: 'pendiente' | 'confirmado' | 'cancelado';
+}
 
 // Función auxiliar para calcular los bloques libres (Algoritmo Fase 3)
 function calcularBloquesLibres(
@@ -70,18 +85,17 @@ export async function procesarMensajeWhatsApp(msg: MensajeEntrante): Promise<Res
     // 2. INTENCIÓN: Consulta de Horarios Disponibles
     if (textoLimpio === 'turno' || textoLimpio.includes('horarios') || textoLimpio.includes('turnos')) {
         // Buscamos la configuración horaria del negocio
-        const { data: configData } = await supabase
+        const { data: configData, error: errorConfig } = await supabase
             .from('configuracion_horarios')
             .select('hora_apertura, hora_cierre, bloque_minutos')
             .eq('negocio_id', msg.negocioId)
-            .maybeSingle();
+            .maybeSingle<ConfigHorarios>();
 
-        if (!configData) {
+        if (!configData || errorConfig) {
             return { textoEnviar: 'La barbería aún no configuró sus horarios de atención.' };
         }
 
-        // Casteamos el resultado a la interfaz tipada de la tabla
-        const config = configData as ConfigHorarios;
+        const config = configData;
 
         // Buscamos los turnos ocupados para el día de hoy
         const inicioDia = `${fechaHoy}T00:00:00.000Z`;
@@ -96,8 +110,7 @@ export async function procesarMensajeWhatsApp(msg: MensajeEntrante): Promise<Res
             .lte('fecha_hora', finDia);
 
         const horasOcupadas = (turnosOcupados || []).map((t) => {
-            // Casteamos de forma segura cada fila para extraer la propiedad de Supabase
-            const fila = t as unknown as { fecha_hora: string };
+            const fila = t as unknown as TurnoOcupado;
             const d = new Date(fila.fecha_hora);
             return d.toLocaleTimeString('es-AR', {
                 hour: '2-digit',
@@ -145,8 +158,7 @@ export async function procesarMensajeWhatsApp(msg: MensajeEntrante): Promise<Res
             };
         }
 
-        // Estructuramos el objeto local inmutable para la inserción
-        const nuevoTurno: Database['public']['Tables']['turnos']['Insert'] = {
+        const nuevoTurno: TurnoInsert = {
             negocio_id: msg.negocioId,
             cliente_nombre: `Cliente WhatsApp (${msg.telefonoCliente.slice(-4)})`,
             cliente_telefono: msg.telefonoCliente,
@@ -154,7 +166,7 @@ export async function procesarMensajeWhatsApp(msg: MensajeEntrante): Promise<Res
             estado: 'pendiente',
         };
 
-        const { error } = await supabase.from('turnos').insert([nuevoTurno]);
+        const { error } = await supabase.from('turnos').insert<TurnoInsert>([nuevoTurno]);
 
         if (error) {
             return { textoEnviar: 'Hubo un problema al registrar tu turno. Por favor, intentá nuevamente.' };
