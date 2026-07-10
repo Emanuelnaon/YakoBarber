@@ -28,7 +28,8 @@ services:
             - WA_IGNORE_GROUP_MESSAGES=true
 
             # Versión de WhatsApp para forzar el QR
-            - CONFIG_SESSION_PHONE_VERSION=2.3000.1015901307 
+            - CONFIG_SESSION_PHONE_VERSION=2.26.26.73
+            - WEB_VERSION=2.3000.1042946545
 
         volumes:
             - evolution_instances:/evolution/instances
