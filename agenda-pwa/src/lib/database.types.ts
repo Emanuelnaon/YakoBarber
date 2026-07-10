@@ -93,12 +93,46 @@ export interface Database {
                     referencedColumns: string[];
                 }[];
             };
+            configuracion_horarios: {
+                Row: {
+                    negocio_id: string;
+                    hora_apertura: string;
+                    hora_cierre: string;
+                    bloque_minutos: number;
+                    dias_laborales: number[];
+                    created_at: string | null;
+                };
+                Insert: {
+                    negocio_id: string;
+                    hora_apertura: string;
+                    hora_cierre: string;
+                    bloque_minutos: number;
+                    dias_laborales?: number[];
+                    created_at?: string;
+                };
+                Update: {
+                    negocio_id?: string;
+                    hora_apertura?: string;
+                    hora_cierre?: string;
+                    bloque_minutos?: number;
+                    dias_laborales?: number[];
+                    created_at?: string;
+                };
+                Relationships: {
+                    foreignKeyName: string;
+                    columns: string[];
+                    isOneToOne?: boolean;
+                    referencedRelation: string;
+                    referencedColumns: string[];
+                }[];
+            };
             turnos: {
                 Row: {
                     id: string;
                     negocio_id: string;
                     servicio_id: string | null;
                     cliente_nombre: string;
+                    cliente_telefono: string;
                     fecha_hora: string;
                     estado: 'pendiente' | 'confirmado' | 'cancelado';
                     created_at: string;
@@ -108,6 +142,7 @@ export interface Database {
                     negocio_id: string;
                     servicio_id?: string | null;
                     cliente_nombre: string;
+                    cliente_telefono: string;
                     fecha_hora: string;
                     estado?: 'pendiente' | 'confirmado' | 'cancelado';
                     created_at?: string;
@@ -117,6 +152,7 @@ export interface Database {
                     negocio_id?: string;
                     servicio_id?: string | null;
                     cliente_nombre?: string;
+                    cliente_telefono?: string;
                     fecha_hora?: string;
                     estado?: 'pendiente' | 'confirmado' | 'cancelado';
                     created_at?: string;
