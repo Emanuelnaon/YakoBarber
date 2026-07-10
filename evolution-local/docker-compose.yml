@@ -13,10 +13,11 @@ services:
             # Base de datos Profesional
             - DATABASE_ENABLED=true
             - DATABASE_PROVIDER=postgresql
-            - DATABASE_CONNECTION_URI=postgresql://postgres:root@postgres:5432/evolution?sslmode=disable
+            - DATABASE_CONNECTION_URI=postgresql://postgres:root@postgres:5432/evolution?schema=public
 
             # Caché Profesional
             - CACHE_REDIS_ENABLED=true
+            - CACHE_REDIS_URI=redis://redis:6379/6
             - CACHE_REDIS_HOST=redis
             - CACHE_REDIS_PORT=6379
             - CACHE_REDIS_DB=1
@@ -25,6 +26,9 @@ services:
 
             - WEBSOCKET_ENABLED=false
             - WA_IGNORE_GROUP_MESSAGES=true
+
+            # Versión de WhatsApp para forzar el QR
+            - CONFIG_SESSION_PHONE_VERSION=2.3000.1015901307 
 
         volumes:
             - evolution_instances:/evolution/instances
