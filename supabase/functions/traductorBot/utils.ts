@@ -1,5 +1,20 @@
 // supabase/functions/traductor-bot/utils.ts
-export function extraerDatosWhatsApp(payload: any) {
+interface WhatsAppPayload {
+    event?: string;
+    instance?: string;
+    data?: {
+        key?: {
+            remoteJid?: string;
+            fromMe?: boolean;
+        };
+        message?: {
+            conversation?: string;
+            extendedTextMessage?: { text?: string };
+        };
+    };
+}
+
+export function extraerDatosWhatsApp(payload: WhatsAppPayload) {
     // Evolution API v2 usa este formato para mensajes recibidos
     const data = payload.data;
     const message = data?.message;
